@@ -1,0 +1,148 @@
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+
+<div id="app">
+  <div
+    class="board"
+    :class="{ rotate: rotate }"
+    :style="{ '--cell-size': cellSize + 'px' }"
+  >
+    <div class="row" :class="'row' + row" v-for="row in 4">
+      <div class="cell number" v-for="num in 11">{{num + 1}}</div>
+      <div class="cell block">
+        <i
+          class="fa fa-unlock-alt"
+          :class="row == 3 ? 'fa-unlock-alt' : 'fa-lock'"
+        ></i>
+      </div>
+      <div class="cell">18</div>
+    </div>
+    <div class="row">
+      <div class="cell empty" v-for="row in 7"></div>
+      <div class="cell life" v-for="row in 4">X</div>
+      <div class="cell">-10</div>
+      <div class="cell">47</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const { createApp } = Vue;
+
+  function debounce(fn, wait = 200) {
+    let timer;
+    return function (...args) {
+      if (timer) {
+        clearTimeout(timer); // clear any pre-existing timer
+      }
+      const context = this; // get the current context
+      timer = setTimeout(() => {
+        fn.apply(context, args); // call the function if time expires
+      }, wait);
+    };
+  }
+
+  createApp({
+    data() {
+      return {
+        cellSize: 10,
+        rotate: false,
+      };
+    },
+    created() {
+      this.debouncedResized = debounce(this.windowResize);
+    },
+    mounted() {
+      window.addEventListener('resize', this.debouncedResized);
+      this.windowResize();
+    },
+    unmounted() {
+      window.removeEventListener('resize', this.debouncedResized);
+    },
+    methods: {
+      windowResize() {
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const long = Math.max(width, height);
+        const short = Math.min(width, height);
+
+        this.rotate = width < height;
+        this.cellSize = Math.min((long - 30) / 13 - 6, (short - 20) / 5 - 16);
+      },
+    },
+  }).mount('#app');
+</script>
+
+<style>
+  body {
+    margin: 0;
+  }
+  .board {
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(200, 196, 189);
+  }
+  .rotate {
+    flex-direction: row;
+    .row {
+      flex-direction: column-reverse;
+
+      .cell {
+        transform: rotate(-90deg);
+      }
+    }
+  }
+
+  .row {
+    display: flex;
+    padding: 5px;
+    background-color: var(--color);
+  }
+  .row1 {
+    --color: #e41c2c;
+  }
+  .row2 {
+    --color: #eec300;
+  }
+  .row3 {
+    --color: #009200;
+  }
+  .row4 {
+    --color: #0063b2;
+  }
+
+  .cell {
+    width: var(--cell-size);
+    height: var(--cell-size);
+    margin: 3px;
+    border-radius: 5px;
+    background-color: #fffc;
+    font-size: calc(var(--cell-size) / 2);
+    color: var(--color);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.block {
+      border-radius: 50%;
+    }
+    &.empty {
+      background-color: transparent;
+    }
+  }
+</style>
