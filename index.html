@@ -1,148 +1,337 @@
-<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-  integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
-  crossorigin="anonymous"
-  referrerpolicy="no-referrer"
-/>
+<head>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
 
-<div id="app">
-  <div
-    class="board"
-    :class="{ rotate: rotate }"
-    :style="{ '--cell-size': cellSize + 'px' }"
-  >
-    <div class="row" :class="'row' + row" v-for="row in 4">
-      <div class="cell number" v-for="num in 11">{{num + 1}}</div>
-      <div class="cell block">
-        <i
-          class="fa fa-unlock-alt"
-          :class="row == 3 ? 'fa-unlock-alt' : 'fa-lock'"
-        ></i>
+<body>
+  <div id="app">
+    <div
+      class="board"
+      :class="{ rotate: rotate }"
+      :style="{ '--cell-size': cellSize + 'px' }"
+    >
+      <div class="row" :class="'row' + row_i" v-for="(row, row_i) in rows">
+        <div
+          v-for="(num, num_i) in row"
+          class="cell number"
+          :class="{'marked': marks[row_i].has(num), 'blocked': maxMark(row_i) > num_i || locked[row_i] }"
+          @click="mark(row_i, num_i)"
+        >
+          {{num}}
+          <i class="fa fa-times"></i>
+        </div>
+
+        <div
+          class="cell block"
+          :class="{ 'marked': locked[row_i] }"
+          @click="lock(row_i)"
+        >
+          <i class="fa" :class="locked[row_i] ? 'fa-lock' : 'fa-unlock-alt'"></i>
+        </div>
+
+        <div class="cell">{{score(row_i)}}</div>
       </div>
-      <div class="cell">18</div>
+
+      <div class="row">
+        <div class="cell block restart" @click="openOverlay">
+          <i class="fa fa-refresh" aria-hidden="true"></i>
+        </div>
+
+        <div class="cell empty" v-for="_ in 6"></div>
+
+        <div class="cell life" v-for="(status, i) in lives" @click="life(i)">
+          <i v-if="status" class="fa fa-times"></i>
+        </div>
+        <div class="cell">{{livesScore()}}</div>
+
+        <div class="cell">{{totalScore()}}</div>
+      </div>
     </div>
-    <div class="row">
-      <div class="cell empty" v-for="row in 7"></div>
-      <div class="cell life" v-for="row in 4">X</div>
-      <div class="cell">-10</div>
-      <div class="cell">47</div>
+    <div
+      v-if="overlay"
+      class="overlay"
+      :style="{ '--cell-size': cellSize + 'px' }"
+      :class="{ rotate: rotate }"
+    >
+      <div class="card">
+        Are you sure you want to restart the game?
+
+        <div class="buttons">
+          <button class="cancel" @click="closeOverlay">Cancel</button>
+          <button class="restart" @click="reset">Restart</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-  const { createApp } = Vue;
+  <script>
+    const { createApp } = Vue;
 
-  function debounce(fn, wait = 200) {
-    let timer;
-    return function (...args) {
-      if (timer) {
-        clearTimeout(timer); // clear any pre-existing timer
-      }
-      const context = this; // get the current context
-      timer = setTimeout(() => {
-        fn.apply(context, args); // call the function if time expires
-      }, wait);
-    };
-  }
+    createApp({
+      data() {
+        return {
+          cellSize: 10,
+          rotate: false,
+          rows: [
+            Array.from({ length: 11 }, (_, i) => i + 2),
+            Array.from({ length: 11 }, (_, i) => i + 2),
+            Array.from({ length: 11 }, (_, i) => 12 - i),
+            Array.from({ length: 11 }, (_, i) => 12 - i),
+          ],
+          overlay: false,
 
-  createApp({
-    data() {
-      return {
-        cellSize: 10,
-        rotate: false,
-      };
-    },
-    created() {
-      this.debouncedResized = debounce(this.windowResize);
-    },
-    mounted() {
-      window.addEventListener('resize', this.debouncedResized);
-      this.windowResize();
-    },
-    unmounted() {
-      window.removeEventListener('resize', this.debouncedResized);
-    },
-    methods: {
-      windowResize() {
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-
-        const long = Math.max(width, height);
-        const short = Math.min(width, height);
-
-        this.rotate = width < height;
-        this.cellSize = Math.min((long - 30) / 13 - 6, (short - 20) / 5 - 16);
+          marks: [new Set(), new Set(), new Set(), new Set()],
+          locked: [false, false, false, false],
+          lives: [false, false, false, false],
+        };
       },
-    },
-  }).mount('#app');
-</script>
 
-<style>
-  body {
-    margin: 0;
-  }
-  .board {
-    width: 100vw;
-    height: 100vh;
-    box-sizing: border-box;
-    padding: 10px;
+      mounted() {
+        window.addEventListener('resize', this.windowResize);
+        this.windowResize();
+      },
+      unmounted() {
+        window.removeEventListener('resize', this.windowResize);
+      },
 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: rgb(200, 196, 189);
-  }
-  .rotate {
-    flex-direction: row;
-    .row {
-      flex-direction: column-reverse;
+      methods: {
+        mark(row_i, num_i) {
+          // avoid marking previous numbers
+          if (this.maxMark(row_i) > num_i) return;
+          // avoid marking locked rows (except unmarking last number)
+          if (this.locked[row_i] && !(this.lastMarked(row_i) && num_i == 10))
+            return;
 
-      .cell {
-        transform: rotate(-90deg);
-      }
+          // avoid marking last number
+          if (num_i == 10) {
+            if (this.marks[row_i].size < 5) return;
+
+            this.locked[row_i] = !this.lastMarked(row_i);
+          }
+
+          const num = this.rows[row_i][num_i];
+          if (this.marks[row_i].has(num)) {
+            this.marks[row_i].delete(num);
+          } else {
+            this.marks[row_i].add(num);
+          }
+        },
+
+        maxMark(row_i) {
+          max = -1;
+          this.marks[row_i].forEach((mark) => {
+            max = Math.max(max, this.rows[row_i].indexOf(mark));
+          });
+          return max;
+        },
+
+        lock(row_i) {
+          this.locked[row_i] = !this.locked[row_i];
+        },
+        score(row_i) {
+          let marks = this.marks[row_i].size;
+          if (this.lastMarked(row_i)) {
+            marks += 1;
+          }
+          return (marks * (marks + 1)) / 2;
+        },
+
+        last(row_i) {
+          return this.rows[row_i].slice(-1)[0];
+        },
+        lastMarked(row_i) {
+          return this.marks[row_i].has(this.last(row_i));
+        },
+
+        life(i) {
+          this.lives[i] = !this.lives[i];
+        },
+        livesScore() {
+          return this.lives.filter((x) => x).length * -5;
+        },
+
+        totalScore() {
+          return (
+            this.score(0) +
+            this.score(1) +
+            this.score(2) +
+            this.score(3) +
+            this.livesScore()
+          );
+        },
+
+        openOverlay() {
+          this.overlay = true;
+        },
+        closeOverlay() {
+          this.overlay = false;
+        },
+        reset() {
+          this.marks = [new Set(), new Set(), new Set(), new Set()];
+          this.locked = [false, false, false, false];
+          this.lives = [false, false, false, false];
+          this.overlay = false;
+        },
+
+        windowResize() {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+
+          const long = Math.max(width, height);
+          const short = Math.min(width, height);
+
+          this.rotate = width < height;
+          this.cellSize = Math.min((long - 30) / 13 - 6, (short - 20) / 5 - 16);
+          console.log(long, short, this.cellSize)
+        },
+      },
+    }).mount('#app');
+  </script>
+
+  <style>
+    html {
+      overflow: hidden;
     }
-  }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+        'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    }
+    .board {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 10px;
 
-  .row {
-    display: flex;
-    padding: 5px;
-    background-color: var(--color);
-  }
-  .row1 {
-    --color: #e41c2c;
-  }
-  .row2 {
-    --color: #eec300;
-  }
-  .row3 {
-    --color: #009200;
-  }
-  .row4 {
-    --color: #0063b2;
-  }
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background-color: rgb(200, 196, 189);
+    }
+    .rotate {
+      flex-direction: row-reverse;
+    }
+    .rotate .row {
+      flex-direction: column;
+    }
+    .rotate .cell {
+      transform: rotate(90deg);
+    }
 
-  .cell {
-    width: var(--cell-size);
-    height: var(--cell-size);
-    margin: 3px;
-    border-radius: 5px;
-    background-color: #fffc;
-    font-size: calc(var(--cell-size) / 2);
-    color: var(--color);
+    .row {
+      display: flex;
+      padding: 5px;
+      background-color: var(--color);
+    }
+    .row0 {
+      --color: #e41c2c;
+    }
+    .row1 {
+      --color: #eec300;
+    }
+    .row2 {
+      --color: #009200;
+    }
+    .row3 {
+      --color: #0063b2;
+    }
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    .cell {
+      width: var(--cell-size);
+      height: var(--cell-size);
+      margin: 3px;
+      border-radius: 5px;
+      background-color: #fffc;
+      font-size: calc(var(--cell-size) / 2);
+      color: var(--color);
 
-    &.block {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      transition: opacity .5s;
+    }
+
+    .number,
+    .block,
+    .life {
+      cursor: pointer;
+    }
+    .blocked {
+      cursor: not-allowed;
+    }
+    .blocked,
+    .marked {
+      opacity: 0.7;
+    }
+    .number i {
+      position: absolute;
+      opacity: 0;
+    }
+    .number.marked i {
+      opacity: 1;
+    }
+
+    .block {
       border-radius: 50%;
     }
-    &.empty {
+    .empty {
       background-color: transparent;
     }
-  }
-</style>
+    .fa-times {
+      font-size: var(--cell-size);
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #0008;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--cell-size) / 3);
+    }
+    .rotate .card {
+      transform: rotate(90deg);
+    }
+    .card {
+      background-color: white;
+      border-radius: 10px;
+      padding: 10px 20px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: center;
+    }
+    button {
+      cursor: pointer;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 16px;
+
+      font-size: .8em;
+    }
+    .cancel {
+      background-color: #e41c2c;
+      color: white;
+    }
+    .restart {
+      background-color: #0063b2;
+      color: white;
+    }
+  </style>
+</body>
