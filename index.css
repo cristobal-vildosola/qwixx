@@ -1,0 +1,149 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande',
+    'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+.board {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgb(200, 196, 189);
+}
+.rotate {
+  flex-direction: row-reverse;
+}
+.rotate .row {
+  flex-direction: column;
+}
+.rotate .cell {
+  transform: rotate(90deg);
+}
+
+.color0 {
+  --color: #e41c2c;
+}
+.color1 {
+  --color: #eec300;
+}
+.color2 {
+  --color: #009200;
+}
+.color3 {
+  --color: #0063b2;
+}
+
+
+.row {
+  display: flex;
+  padding: 5px;
+  background-color: var(--color);
+}
+
+.cell {
+  width: var(--cell-size);
+  height: var(--cell-size);
+  margin: 3px;
+  border-radius: 5px;
+  background-color: #fffc;
+  font-size: calc(var(--cell-size) / 2);
+  color: var(--color);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: opacity .5s;
+}
+
+.number,
+.block,
+.life {
+  cursor: pointer;
+}
+.blocked {
+  cursor: not-allowed;
+}
+.blocked,
+.marked {
+  opacity: 0.7;
+}
+.fa-times {
+  font-size: var(--cell-size);
+}
+.number i {
+  position: absolute;
+  opacity: 0;
+}
+.number.marked i {
+  opacity: 1;
+}
+
+.block {
+  border-radius: 50%;
+}
+
+
+.restart {
+  background-color: #0063b2;
+  color: white;
+}
+.undo {
+  background-color: #444;
+  color: white;
+}
+.history {
+  background-color: var(--color);
+  color: white;
+}
+.history.color0, .history.color1 {
+  color: black;
+}
+.empty {
+  background-color: transparent;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0008;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--cell-size) / 2);
+}
+.rotate .card {
+  transform: rotate(90deg);
+}
+.card {
+  background-color: white;
+  border-radius: calc(var(--cell-size) / 6);
+  padding: calc(var(--cell-size) / 3) calc(var(--cell-size) / 2);
+}
+.buttons {
+  display: flex;
+  justify-content: center;
+}
+button {
+  cursor: pointer;
+  margin: 10px;
+  border: none;
+  border-radius: calc(var(--cell-size) / 6);
+  padding: calc(var(--cell-size) / 6) calc(var(--cell-size) / 3);
+
+  font-size: .8em;
+}
+.cancel {
+  background-color: #e41c2c;
+  color: white;
+}

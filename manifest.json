@@ -1,0 +1,16 @@
+{
+  "name": "QWIXX Sheet - by Piña",
+  "short_name": "QWIXX Sheet",
+  "start_url": "index.html",
+  "display": "fullscreen",
+  "background_color": "#c8c4bd",
+  "theme_color": "#000",
+  "orientation": "landscape",
+  "icons": [
+    {
+      "src": "pina.png",
+      "type": "image/png",
+      "sizes": "120x120"
+    }
+  ]
+}
