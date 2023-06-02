@@ -26,6 +26,7 @@ createApp({
     window.addEventListener('resize', this.checkWindowSize);
     setInterval(this.checkWindowSize, 200);
     this.checkWindowSize();
+    this.loadGame();
   },
   unmounted() {
     window.removeEventListener('resize', this.checkWindowSize);
@@ -44,11 +45,14 @@ createApp({
       const step = [row_i, num_i];
       if (this.marks[row_i].has(num)) {
         this.marks[row_i].delete(num);
-        this.history = this.history.filter(x => x[0] != row_i || x[1] != num_i);
+        this.history = this.history.filter(
+          (x) => x[0] != row_i || x[1] != num_i
+        );
       } else {
         this.marks[row_i].add(num);
         this.history.push(step);
       }
+      this.saveGame();
     },
 
     maxMark(row_i) {
@@ -62,6 +66,7 @@ createApp({
     lock(row_i) {
       if (this.lastMarked(row_i)) return;
       this.locked[row_i] = !this.locked[row_i];
+      this.saveGame();
     },
     isLocked(row_i) {
       return this.locked[row_i] || this.lastMarked(row_i);
@@ -83,13 +88,16 @@ createApp({
 
     life(i) {
       this.lives[i] = !this.lives[i];
+      this.saveGame();
     },
     livesScore() {
       return this.lives.filter((x) => x).length * -5;
     },
 
     totalScore() {
-      return [0, 1, 2, 3].reduce((s, i) => s + this.score(i), 0) + this.livesScore();
+      return (
+        [0, 1, 2, 3].reduce((s, i) => s + this.score(i), 0) + this.livesScore()
+      );
     },
 
     openOverlay() {
@@ -104,6 +112,7 @@ createApp({
       this.lives = [false, false, false, false];
       this.history = [];
       this.overlay = false;
+      this.saveGame();
     },
 
     lastStep() {
@@ -112,12 +121,33 @@ createApp({
     lastNum() {
       const last = this.lastStep();
       if (last[0] == -1) return '';
-      return this.rows[last[0]][last[1]]
+      return this.rows[last[0]][last[1]];
     },
     undo() {
       const last = this.lastStep();
       if (last[0] == -1) return;
       this.mark(...last);
+      this.saveGame();
+    },
+
+    saveGame() {
+      const game = {
+        marks: this.marks.map((mark) => Array.from(mark)),
+        history: this.history,
+        locked: this.locked,
+        lives: this.lives,
+      };
+      localStorage.setItem('qwixx_game', JSON.stringify(game));
+    },
+    loadGame() {
+      const save = JSON.parse(localStorage.getItem('qwixx_game'));
+
+      if (save) {
+        this.marks = save.marks.map((marks) => new Set(marks));
+        this.locked = save.locked;
+        this.lives = save.lives;
+        this.history = save.history;
+      }
     },
 
     checkWindowSize() {
@@ -126,7 +156,7 @@ createApp({
 
       // avoid unnecessary calculations
       if (width == this.width && height == this.height) {
-        return
+        return;
       }
       this.width = width;
       this.height = height;

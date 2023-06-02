@@ -39,7 +39,6 @@ body {
   --color: #0063b2;
 }
 
-
 .row {
   display: flex;
   padding: 5px;
@@ -59,7 +58,7 @@ body {
   align-items: center;
   justify-content: center;
 
-  transition: opacity .5s;
+  transition: opacity 0.5s;
 }
 
 .number,
@@ -89,7 +88,6 @@ body {
   border-radius: 50%;
 }
 
-
 .restart {
   background-color: #0063b2;
   color: white;
@@ -102,7 +100,8 @@ body {
   background-color: var(--color);
   color: white;
 }
-.history.color0, .history.color1 {
+.history.color0,
+.history.color1 {
   color: black;
 }
 .empty {
@@ -141,7 +140,7 @@ button {
   border-radius: calc(var(--cell-size) / 6);
   padding: calc(var(--cell-size) / 6) calc(var(--cell-size) / 3);
 
-  font-size: .8em;
+  font-size: 0.8em;
 }
 .cancel {
   background-color: #e41c2c;
