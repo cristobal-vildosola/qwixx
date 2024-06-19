@@ -20,7 +20,11 @@ body {
   flex-direction: row-reverse;
 }
 .rotate .row {
+  padding: 5px 0;
   flex-direction: column;
+}
+.rotate .cell-wrapper {
+  padding: 0 5px;
 }
 .rotate .cell {
   transform: rotate(90deg);
@@ -41,10 +45,14 @@ body {
 
 .row {
   display: flex;
-  padding: 5px;
+  padding: 0 5px;
   background-color: var(--color);
 }
 
+.cell-wrapper {
+  padding: 5px 0;
+  background-color: var(--color);
+}
 .cell {
   width: var(--cell-size);
   height: var(--cell-size);
@@ -119,7 +127,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(var(--cell-size) / 2);
+  font-size: calc(var(--cell-size) * 0.5);
 }
 .rotate .card {
   transform: rotate(90deg);
@@ -128,10 +136,12 @@ body {
   background-color: white;
   border-radius: calc(var(--cell-size) / 6);
   padding: calc(var(--cell-size) / 3) calc(var(--cell-size) / 2);
+  text-align: center;
 }
 .buttons {
   display: flex;
   justify-content: center;
+  margin-top: 0.3em;
 }
 button {
   cursor: pointer;
@@ -140,9 +150,17 @@ button {
   border-radius: calc(var(--cell-size) / 6);
   padding: calc(var(--cell-size) / 6) calc(var(--cell-size) / 3);
 
-  font-size: 0.8em;
+  font-size: calc(var(--cell-size) * 0.4);
 }
 .cancel {
   background-color: #e41c2c;
   color: white;
+}
+
+.seedInput {
+  font-size: calc(var(--cell-size) * 0.4);
+}
+.seedInput input {
+  margin-left: 0.5em;
+  font-size: calc(var(--cell-size) * 0.4);
 }

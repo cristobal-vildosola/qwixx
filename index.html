@@ -31,16 +31,23 @@
       >
         <div class="row" :class="'color' + row_i" v-for="(row, row_i) in rows">
           <div
-            v-for="(num, num_i) in row"
-            class="cell number"
-            :class="{
-              'marked': marks[row_i].has(num),
-              'blocked': maxMark(row_i) > num_i || isLocked(row_i)
-            }"
-            @click="mark(row_i, num_i)"
+            v-for="(cell, cell_i) in row"
+            class="cell-wrapper"
+            :class="'color' + cell[1]"
           >
-            {{num}}
-            <i class="fa fa-times"></i>
+            <div
+              class="cell number"
+              :class="[
+                {
+                  'marked': marks[row_i].has(cell_i),
+                  'blocked': maxMark(row_i) > cell_i || isLocked(row_i),
+                },
+              ]"
+              @click="mark(row_i, cell_i)"
+            >
+              {{cell[0]}}
+              <i class="fa fa-times"></i>
+            </div>
           </div>
 
           <div
@@ -54,22 +61,27 @@
             ></i>
           </div>
 
-          <div class="cell">{{score(row_i)}}</div>
+          <div class="cell-wrapper">
+            <div class="cell">{{score(row_i)}}</div>
+          </div>
         </div>
 
         <div class="row">
           <div class="cell block restart" @click="openOverlay">
             <i class="fa fa-refresh"></i>
           </div>
+          <div class="cell block restart" @click="openModeOverlay">
+            <i class="fa fa-sliders"></i>
+          </div>
 
           <div class="cell block undo" @click="undo">
             <i class="fa fa-undo"></i>
           </div>
-          <div class="cell history" :class="'color' + lastStep()[0]">
+          <div class="cell history" :class="'color' + lastColor()">
             {{ lastNum() }}
           </div>
 
-          <div class="cell empty" v-for="_ in 4"></div>
+          <div class="cell empty" v-for="_ in 3"></div>
 
           <div class="cell life" v-for="(status, i) in lives" @click="life(i)">
             <i v-if="status" class="fa fa-times"></i>
@@ -80,7 +92,7 @@
         </div>
       </div>
       <div
-        v-if="overlay"
+        v-if="resetOverlay"
         class="overlay"
         :style="{ '--cell-size': cellSize + 'px' }"
         :class="{ rotate: rotate }"
@@ -93,6 +105,33 @@
             <button class="cancel" @click="closeOverlay">Cancel</button>
             <button class="restart" @click="reset">Restart</button>
           </div>
+        </div>
+      </div>
+      <div
+        v-if="modeOverlay"
+        class="overlay"
+        :style="{ '--cell-size': cellSize + 'px' }"
+        :class="{ rotate: rotate }"
+        @click.self="closeModeOverlay"
+      >
+        <div class="card">
+          Do you want to change the game mode?
+
+          <div class="buttons">
+            <button class="cancel" @click="closeModeOverlay">Cancel</button>
+            <button
+              v-for="mode in Object.keys(modes)"
+              class="restart"
+              @click="selectMode(mode)"
+            >
+              {{ mode }}
+            </button>
+          </div>
+          <div class="buttons seedInput">
+            <label for="seed">Random Seed:</label>
+            <input type="text" :value="randomSeed" id="seed" />
+          </div>
+          <div class="buttons"></div>
         </div>
       </div>
     </div>
